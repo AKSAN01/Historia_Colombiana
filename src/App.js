@@ -1,194 +1,97 @@
-import React, { useState, useRef, useEffect } from 'react';
-import departmentPaths from './data/departmentPaths';
-import eventsData from './data/events';
+import React, { useState } from "react";
+import Map from "./Map";
+import { eventsData } from "./data/events"; // Tu archivo de datos
 import './App.css';
 
+// Función para quitar tildes y mayúsculas para comparar textos fácilmente
+const normalizeText = (text) => {
+  return text.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+};
+
 function App() {
-  const [selectedDept, setSelectedDept] = useState(null);
+  const [tooltipContent, setTooltipContent] = useState("");
+  const [selectedDepartment, setSelectedDepartment] = useState(null);
   const [selectedEvent, setSelectedEvent] = useState(null);
-  const [hoveredDept, setHoveredDept] = useState(null);
-  const [animating, setAnimating] = useState(false);
-  const panelRef = useRef(null);
 
-  useEffect(() => {
-    if (selectedDept && panelRef.current) {
-      panelRef.current.scrollTop = 0;
+  const handleSelectDepartment = (deptName) => {
+    setSelectedDepartment(deptName);
+    setSelectedEvent(null); // Ocultar el resumen anterior al cambiar de región
+  };
+
+  // Buscar los eventos del departamento seleccionado usando el texto normalizado
+  let currentEvents = [];
+  if (selectedDepartment) {
+    const normalizedSelected = normalizeText(selectedDepartment);
+    
+    // Buscamos en el objeto eventsData la llave que coincida (ej. "Antioquia" === "antioquia")
+    const foundKey = Object.keys(eventsData).find(
+      key => normalizeText(key) === normalizedSelected
+    );
+    
+    if (foundKey) {
+      currentEvents = eventsData[foundKey];
     }
-  }, [selectedDept]);
-
-  const handleDeptClick = (deptName) => {
-    if (animating) return;
-    if (selectedDept === deptName) {
-      setAnimating(true);
-      setSelectedEvent(null);
-      setTimeout(() => {
-        setSelectedDept(null);
-        setAnimating(false);
-      }, 300);
-    } else {
-      setAnimating(true);
-      setSelectedEvent(null);
-      setSelectedDept(deptName);
-      setTimeout(() => setAnimating(false), 400);
-    }
-  };
-
-  const handleEventClick = (evt) => {
-    setSelectedEvent(selectedEvent === evt ? null : evt);
-  };
-
-  const handleBack = () => {
-    setSelectedEvent(null);
-    setSelectedDept(null);
-  };
-
-  const deptEvents = selectedDept ? eventsData[selectedDept] : null;
-  const hasEvents = deptEvents && deptEvents.events && deptEvents.events.length > 0;
+  }
 
   return (
-    <div className="app">
-      <div className="bg-grain"></div>
-      <div className="bg-circle bg-circle-1"></div>
-      <div className="bg-circle bg-circle-2"></div>
-      <div className="bg-circle bg-circle-3"></div>
-
+    <div className="app-container">
       <header className="header">
-        <div className="header-inner">
-          <div className="flag-accent">
-            <span className="flag-yellow"></span>
-            <span className="flag-blue"></span>
-            <span className="flag-red"></span>
-          </div>
-          <h1 className="title">Colombia</h1>
-          <h2 className="subtitle">Historia & Cultura · 2000–2026</h2>
-          <p className="description">
-            Explora los hechos que marcaron la historia colombiana en el siglo XXI. 
-            Haz clic en un departamento para descubrir sus eventos más significativos.
-          </p>
-        </div>
+        <h1>Historia de Colombia <span className="highlight">(2000 - 2026)</span></h1>
+        <p>Selecciona un departamento en el mapa para explorar los sucesos históricos que marcaron la región.</p>
       </header>
 
-      <main className="main-content">
-        <div className={`map-container ${selectedDept ? 'map-shifted' : ''}`}>
-          <svg
-            viewBox="30 25 470 520"
-            className="colombia-map"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <defs>
-              <filter id="glow">
-                <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
-                <feMerge>
-                  <feMergeNode in="coloredBlur"/>
-                  <feMergeNode in="SourceGraphic"/>
-                </feMerge>
-              </filter>
-              <linearGradient id="selectedGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stopColor="#F5C518" />
-                <stop offset="100%" stopColor="#E8A317" />
-              </linearGradient>
-              <linearGradient id="hoverGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stopColor="#3D7B3F" />
-                <stop offset="100%" stopColor="#5DA160" />
-              </linearGradient>
-            </defs>
-
-            {Object.entries(departmentPaths).map(([name, data]) => {
-              const isSelected = selectedDept === name;
-              const isHovered = hoveredDept === name;
-              const hasData = eventsData[name] && eventsData[name].events.length > 0;
-              const dimmed = selectedDept && !isSelected;
-
-              return (
-                <g key={name} className="dept-group">
-                  <path
-                    d={data.path}
-                    className={`dept-path ${isSelected ? 'selected' : ''} ${isHovered ? 'hovered' : ''} ${dimmed ? 'dimmed' : ''} ${hasData ? 'has-data' : 'no-data'}`}
-                    onClick={() => hasData && handleDeptClick(name)}
-                    onMouseEnter={() => setHoveredDept(name)}
-                    onMouseLeave={() => setHoveredDept(null)}
-                    fill={isSelected ? 'url(#selectedGrad)' : isHovered && hasData ? 'url(#hoverGrad)' : undefined}
-                    filter={isSelected ? 'url(#glow)' : undefined}
-                  />
-                  <text
-                    x={data.labelX}
-                    y={data.labelY}
-                    className={`dept-label ${isSelected ? 'label-selected' : ''} ${dimmed ? 'label-dimmed' : ''} ${!hasData ? 'label-nodata' : ''}`}
-                    onClick={() => hasData && handleDeptClick(name)}
-                    onMouseEnter={() => setHoveredDept(name)}
-                    onMouseLeave={() => setHoveredDept(null)}
-                  >
-                    {name.length > 15 ? name.split(' ').slice(0, 2).join(' ') : name}
-                  </text>
-                  {hasData && isHovered && !selectedDept && (
-                    <text
-                      x={data.labelX}
-                      y={data.labelY + 10}
-                      className="dept-event-count"
-                    >
-                      {eventsData[name].events.length} evento{eventsData[name].events.length > 1 ? 's' : ''}
-                    </text>
-                  )}
-                </g>
-              );
-            })}
-          </svg>
+      <div className="main-content">
+        {/* COLUMNA IZQUIERDA: Mapa */}
+        <div className="map-section">
+          <Map 
+            setTooltipContent={setTooltipContent} 
+            selectedDepartment={selectedDepartment}
+            onSelectDepartment={handleSelectDepartment}
+          />
+          {tooltipContent && (
+            <div className="custom-tooltip">{tooltipContent}</div>
+          )}
         </div>
 
-        <div className={`side-panel ${selectedDept ? 'panel-open' : ''}`} ref={panelRef}>
-          {selectedDept && (
-            <div className="panel-content">
-              <button className="back-btn" onClick={handleBack}>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                  <path d="M19 12H5M12 19l-7-7 7-7"/>
-                </svg>
-                Volver al mapa
-              </button>
+        {/* COLUMNA DERECHA: Sucesos Históricos */}
+        <div className="events-sidebar">
+          {!selectedDepartment ? (
+            <div className="empty-state">
+              <h3>Selecciona un departamento</h3>
+              <p>Haz clic en cualquier región del mapa para cargar su historia.</p>
+            </div>
+          ) : (
+            <>
+              <h2>Sucesos en {selectedDepartment}</h2>
               
-              <div className="panel-header">
-                <h2 className="panel-title">{selectedDept}</h2>
-                <p className="panel-subtitle">
-                  {hasEvents ? `${deptEvents.events.length} hechos históricos registrados` : 'Sin eventos registrados'}
-                </p>
-              </div>
-
-              {hasEvents && (
-                <div className="timeline">
-                  {deptEvents.events.map((evt, idx) => (
+              {currentEvents.length === 0 ? (
+                <p className="no-events">No hay eventos registrados para este territorio en este lapso de tiempo.</p>
+              ) : (
+                <div className="events-list">
+                  {currentEvents.map((event, index) => (
                     <div 
-                      key={idx} 
-                      className={`timeline-item ${selectedEvent === evt ? 'event-expanded' : ''}`}
-                      style={{ animationDelay: `${idx * 0.08}s` }}
+                      key={index} 
+                      className={`event-card ${selectedEvent?.title === event.title ? 'active' : ''}`}
+                      onClick={() => setSelectedEvent(event)}
                     >
-                      <div className="timeline-line">
-                        <div className="timeline-dot"></div>
-                        {idx < deptEvents.events.length - 1 && <div className="timeline-connector"></div>}
-                      </div>
-                      <div className="timeline-content" onClick={() => handleEventClick(evt)}>
-                        <span className="event-year">{evt.year}</span>
-                        <h3 className="event-title">{evt.title}</h3>
-                        {selectedEvent === evt && (
-                          <div className="event-detail">
-                            <p>{evt.summary}</p>
-                          </div>
-                        )}
-                        <div className="event-toggle">
-                          {selectedEvent === evt ? 'Cerrar ▲' : 'Leer más ▼'}
-                        </div>
-                      </div>
+                      <span className="event-year">{event.year}</span>
+                      <h3 className="event-title">{event.title}</h3>
                     </div>
                   ))}
                 </div>
               )}
-            </div>
+
+              {/* Detalle del Evento (Resumen) */}
+              {selectedEvent && (
+                <div className="event-detail">
+                  <h3>{selectedEvent.title} ({selectedEvent.year})</h3>
+                  <p>{selectedEvent.summary}</p>
+                </div>
+              )}
+            </>
           )}
         </div>
-      </main>
-
-      <footer className="footer">
-        <p>Actividad de Historia y Cultura · Colombia 2000–2026</p>
-        <p className="footer-note">Haz clic en los departamentos coloreados para explorar</p>
-      </footer>
+      </div>
     </div>
   );
 }
