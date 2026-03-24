@@ -1,7 +1,6 @@
 import React from "react";
 import { ComposableMap, Geographies, Geography } from "react-simple-maps";
-
-const geoUrl = "https://gist.githubusercontent.com/john-guerra/43c7656821069d00dcbc/raw/be6a6e239cd5b5b803c6e7c2ec405b793a9064dd/Colombia.geo.json";
+import colombiaGeoJson from './data/colombia.json';
 
 const Map = ({ setTooltipContent, selectedDepartment, onSelectDepartment }) => {
   return (
@@ -12,7 +11,7 @@ const Map = ({ setTooltipContent, selectedDepartment, onSelectDepartment }) => {
         width={800} height={800}
         style={{ width: "100%", height: "auto" }}
       >
-        <Geographies geography={geoUrl}>
+        <Geographies geography={colombiaGeoJson}>
           {({ geographies }) =>
             geographies.map((geo) => {
               // El GeoJSON trae los nombres en mayúsculas (ej. "ANTIOQUIA")
