@@ -1,5 +1,6 @@
 import React from "react";
 import { ComposableMap, Geographies, Geography } from "react-simple-maps";
+// Excelente práctica: Importación local para mejor rendimiento
 import colombiaGeoJson from './data/colombia.json';
 
 const Map = ({ setTooltipContent, selectedDepartment, onSelectDepartment }) => {
@@ -7,17 +8,15 @@ const Map = ({ setTooltipContent, selectedDepartment, onSelectDepartment }) => {
     <div className="map-wrapper">
       <ComposableMap
         projection="geoMercator"
-        projectionConfig={{ scale: 3000, center: [-73.5, 4.5] }}
-        width={800} height={800}
-        style={{ width: "100%", height: "auto" }}
+        projectionConfig={{ scale: 7000, center: [-73.5, 4.5] }}
+        width={1900} 
+        height={2200}
+        className="colombia-svg" 
       >
         <Geographies geography={colombiaGeoJson}>
           {({ geographies }) =>
             geographies.map((geo) => {
-              // El GeoJSON trae los nombres en mayúsculas (ej. "ANTIOQUIA")
               const departmentName = geo.properties.NOMBRE_DPT || "Desconocido";
-              
-              // Verificamos si este es el departamento al que le hicimos clic
               const isSelected = selectedDepartment === departmentName;
 
               return (
@@ -29,21 +28,22 @@ const Map = ({ setTooltipContent, selectedDepartment, onSelectDepartment }) => {
                   onClick={() => onSelectDepartment(departmentName)}
                   style={{
                     default: {
-                      fill: isSelected ? "#FBBF24" : "#172A6E", // Dorado si está seleccionado, Azul oscuro si no
-                      stroke: "#3B52A0", // Borde sutil
-                      strokeWidth: 0.75,
+                      fill: isSelected ? "#FCD116" : "#0F172A", 
+                      stroke: "#a8a8a870", // Borde sutil
+                      strokeWidth: 6,
                       outline: "none",
+                      transition: "all 250ms",
                     },
                     hover: {
-                      fill: isSelected ? "#FBBF24" : "#2B449A", // Brillo al pasar el mouse
+                      fill: isSelected ? "#FCD116" : "#003893", // Azul Colombia al pasar el mouse
                       stroke: "#FFFFFF",
-                      strokeWidth: 1.5,
+                      strokeWidth: 6, // Borde blanco grueso al resaltar
                       outline: "none",
                       transition: "all 250ms",
                       cursor: "pointer"
                     },
                     pressed: {
-                      fill: "#FBBF24",
+                      fill: "#CE1126", // Rojo Colombia al dar clic
                       outline: "none",
                     },
                   }}

@@ -36,8 +36,12 @@ function App() {
   return (
     <div className="app-container">
       <header className="header">
-        <h1>Historia de Colombia <span className="highlight">(2000 - 2026)</span></h1>
+        <h1>Nuestra Historia <span className="highlight">(2000 - 2026)</span></h1>
         <p>Selecciona un departamento en el mapa para explorar los sucesos históricos que marcaron la región.</p>
+        
+        <div className="hovered-department-banner">
+          {tooltipContent ? tooltipContent : "Explora el mapa interactivo"}
+        </div>
       </header>
 
       <div className="main-content">
@@ -48,9 +52,7 @@ function App() {
             selectedDepartment={selectedDepartment}
             onSelectDepartment={handleSelectDepartment}
           />
-          {tooltipContent && (
-            <div className="custom-tooltip">{tooltipContent}</div>
-          )}
+          
         </div>
 
         {/* COLUMNA DERECHA: Sucesos Históricos */}
@@ -81,7 +83,7 @@ function App() {
                 </div>
               )}
 
-              {/* Detalle del Evento (Resumen) */}
+              {/* Detalle del Evento */}
               {selectedEvent && (
                 <div className="event-detail">
                   <h3>{selectedEvent.title} ({selectedEvent.year})</h3>
