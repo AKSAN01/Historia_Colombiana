@@ -160,6 +160,7 @@ body::before {
   box-shadow: 0 4px 15px rgba(0,0,0,0.4);
 }
 
+
 /* RESPONSIVE: Celulares */
 @media (max-width: 900px) {
   .main-content { grid-template-columns: 1fr; }
@@ -167,13 +168,17 @@ body::before {
   
   .map-wrapper {
     width: 100%;
-    aspect-ratio: 1 / 1;
+    /* ELIMINAMOS aspect-ratio: 1/1 para que no se deforme el mapa */
     display: flex;
     justify-content: center;
     align-items: center;
   }
-  .map-wrapper svg { width: 100% !important; height: 100% !important; }
-  .custom-tooltip { display: none !important; }
-
   
+  /* Dejamos que el SVG calcule su altura automáticamente (height: auto) */
+  .map-wrapper svg { 
+    width: 100% !important; 
+    height: auto !important; 
+  }
+  
+  .custom-tooltip { display: none !important; }
 }

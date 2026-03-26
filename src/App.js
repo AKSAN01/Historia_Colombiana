@@ -1,9 +1,9 @@
-import React, { useState } from "react";
+// Añadimos useRef a la importación
+import React, { useState, useRef } from "react";
 import Map from "./Map";
-import { eventsData } from "./data/events"; // Tu archivo de datos
+import { eventsData } from "./data/events";
 import './App.css';
 
-// Función para quitar tildes y mayúsculas para comparar textos fácilmente
 const normalizeText = (text) => {
   return text.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
 };
@@ -13,21 +13,27 @@ function App() {
   const [selectedDepartment, setSelectedDepartment] = useState(null);
   const [selectedEvent, setSelectedEvent] = useState(null);
 
+  // NUEVO: Creamos una referencia a la caja de información
+  const sidebarRef = useRef(null);
+
   const handleSelectDepartment = (deptName) => {
     setSelectedDepartment(deptName);
-    setSelectedEvent(null); // Ocultar el resumen anterior al cambiar de región
+    setSelectedEvent(null);
+    
+    // NUEVO LÓGICA MÓVIL: Si la pantalla es pequeña, hace scroll hacia la información
+    if (window.innerWidth <= 900 && sidebarRef.current) {
+      setTimeout(() => {
+        sidebarRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 150); // Un pequeño retraso de 150ms para que React alcance a pintar los datos
+    }
   };
 
-  // Buscar los eventos del departamento seleccionado usando el texto normalizado
   let currentEvents = [];
   if (selectedDepartment) {
     const normalizedSelected = normalizeText(selectedDepartment);
-    
-    // Buscamos en el objeto eventsData la llave que coincida (ej. "Antioquia" === "antioquia")
     const foundKey = Object.keys(eventsData).find(
       key => normalizeText(key) === normalizedSelected
     );
-    
     if (foundKey) {
       currentEvents = eventsData[foundKey];
     }
@@ -45,18 +51,16 @@ function App() {
       </header>
 
       <div className="main-content">
-        {/* COLUMNA IZQUIERDA: Mapa */}
         <div className="map-section">
           <Map 
             setTooltipContent={setTooltipContent} 
             selectedDepartment={selectedDepartment}
             onSelectDepartment={handleSelectDepartment}
           />
-          
         </div>
 
-        {/* COLUMNA DERECHA: Sucesos Históricos */}
-        <div className="events-sidebar">
+        {/* NUEVO: Le asignamos la referencia ref={sidebarRef} a esta caja */}
+        <div className="events-sidebar" ref={sidebarRef}>
           {!selectedDepartment ? (
             <div className="empty-state">
               <h3>Selecciona un departamento</h3>
@@ -83,7 +87,6 @@ function App() {
                 </div>
               )}
 
-              {/* Detalle del Evento */}
               {selectedEvent && (
                 <div className="event-detail">
                   <h3>{selectedEvent.title} ({selectedEvent.year})</h3>

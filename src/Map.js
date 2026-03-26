@@ -26,6 +26,7 @@ const Map = ({ setTooltipContent, selectedDepartment, onSelectDepartment }) => {
                   onMouseEnter={() => setTooltipContent(departmentName)}
                   onMouseLeave={() => setTooltipContent("")}
                   onClick={() => onSelectDepartment(departmentName)}
+                  onTouchStart={() => onSelectDepartment(departmentName)}
                   style={{
                     default: {
                       fill: isSelected ? "#FCD116" : "#0F172A", 
